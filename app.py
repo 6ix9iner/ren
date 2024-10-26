@@ -1,180 +1,172 @@
-from flask import Flask, request
-import numpy as np
+from flask import Flask, request, render_template_string
+import pandas as pd
 import joblib
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 
-# Load the model
-model = joblib.load('best_xgb_insurance_model.pkl')
-
-# Initialize Flask app
+# Initialize the Flask app
 app = Flask(__name__)
 
-# Define the home route to display the input form
+# Define the features
+numerical_features = ['age', 'bmi', 'children']
+categorical_features = ['sex', 'smoker', 'region']
+
+# Define transformers
+numeric_transformer = Pipeline(steps=[
+    ('scaler', StandardScaler())
+])
+categorical_transformer = Pipeline(steps=[
+    ('onehot', OneHotEncoder(drop='first'))
+])
+
+# Combine transformers using ColumnTransformer
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numerical_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Load the trained model
+model = joblib.load('best_xgb_insurance_model.pkl')
+
+# Define the HTML template with CSS embedded
+html_template = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Insurance Cost Predictor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Insurance Cost Predictor</h1>
+        <form action="/predict" method="post">
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" required>
+
+            <label for="sex">Sex</label>
+            <select id="sex" name="sex" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+            </select>
+
+            <label for="bmi">BMI</label>
+            <input type="number" id="bmi" name="bmi" step="0.1" required>
+
+            <label for="children">Children</label>
+            <input type="number" id="children" name="children" required>
+
+            <label for="smoker">Smoker</label>
+            <select id="smoker" name="smoker" required>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+            </select>
+
+            <label for="region">Region</label>
+            <select id="region" name="region" required>
+                <option value="northeast">Northeast</option>
+                <option value="northwest">Northwest</option>
+                <option value="southeast">Southeast</option>
+                <option value="southwest">Southwest</option>
+            </select>
+
+            <button type="submit">Predict</button>
+        </form>
+    </div>
+</body>
+</html>
+'''
+
+# Define the Flask route for the main page
 @app.route('/')
 def home():
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Insurance Cost Predictor</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background: url('https://www.google.com/imgres?q=images%20for%20web%20background%20download&imgurl=https%3A%2F%2Fplus.unsplash.com%2Fpremium_photo-1673480195911-3075a87738b0%3Ffm%3Djpg%26q%3D60%26w%3D3000%26ixlib%3Drb-4.0.3%26ixid%3DM3wxMjA3fDB8MHxzZWFyY2h8MXx8d2ViJTIwYmFja2dyb3VuZHxlbnwwfHwwfHx8MA%253D%253D&imgrefurl=https%3A%2F%2Funsplash.com%2Fs%2Fphotos%2Fweb-background&docid=ZflMew8d06L0PM&tbnid=V7-TiwsRk-hdzM&vet=12ahUKEwiGsb2o3KyJAxU9WkEAHUm0DNkQM3oECGcQAA..i&w=3000&h=2000&hcb=2&ved=2ahUKEwiGsb2o3KyJAxU9WkEAHUm0DNkQM3oECGcQAA') no-repeat center center fixed;
-                background-size: cover;
-                color: #333;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-            }
-            .container {
-                background-color: rgba(255, 255, 255, 0.8);
-                padding: 20px;
-                border-radius: 8px;
-                width: 300px;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }
-            .form-group {
-                margin-bottom: 15px;
-            }
-            label {
-                display: block;
-                margin-bottom: 5px;
-            }
-            input, select {
-                width: 100%;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-            button {
-                width: 100%;
-                padding: 10px;
-                background-color: #007BFF;
-                border: none;
-                color: white;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            button:hover {
-                background-color: #0056b3;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h2>Insurance Cost Predictor</h2>
-            <form action="/predict" method="post">
-                <div class="form-group">
-                    <label for="age">Age</label>
-                    <input type="number" id="age" name="age" required>
-                </div>
-                <div class="form-group">
-                    <label for="sex">Sex</label>
-                    <select id="sex" name="sex" required>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="bmi">BMI</label>
-                    <input type="number" id="bmi" name="bmi" step="0.1" required>
-                </div>
-                <div class="form-group">
-                    <label for="children">Children</label>
-                    <input type="number" id="children" name="children" required>
-                </div>
-                <div class="form-group">
-                    <label for="smoker">Smoker</label>
-                    <select id="smoker" name="smoker" required>
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="region">Region</label>
-                    <select id="region" name="region" required>
-                        <option value="northeast">Northeast</option>
-                        <option value="northwest">Northwest</option>
-                        <option value="southeast">Southeast</option>
-                        <option value="southwest">Southwest</option>
-                    </select>
-                </div>
-                <button type="submit">Predict</button>
-            </form>
-        </div>
-    </body>
-    </html>
-    """
+    return render_template_string(html_template)
 
-# Define the prediction route
+# Define the route for prediction
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Retrieve form data
-    age = float(request.form['age'])
-    bmi = float(request.form['bmi'])
-    children = int(request.form['children'])
-    smoker = 1 if request.form['smoker'] == 'yes' else 0
-    sex_female = 1 if request.form['sex'] == 'female' else 0
+    try:
+        # Extract form data
+        age = int(request.form['age'])
+        sex = request.form['sex']
+        bmi = float(request.form['bmi'])
+        children = int(request.form['children'])
+        smoker = request.form['smoker']
+        region = request.form['region']
 
-    # Encode the region as one-hot
-    region = request.form['region']
-    region_northeast = region_northwest = region_southeast = region_southwest = 0
-    if region == 'northeast':
-        region_northeast = 1
-    elif region == 'northwest':
-        region_northwest = 1
-    elif region == 'southeast':
-        region_southeast = 1
-    elif region == 'southwest':
-        region_southwest = 1
+        # Create a DataFrame from input data
+        input_data = pd.DataFrame({
+            'age': [age],
+            'sex': [sex],
+            'bmi': [bmi],
+            'children': [children],
+            'smoker': [smoker],
+            'region': [region]
+        })
 
-    # Prepare input for the model
-    input_features = np.array([[age, sex_female, bmi, children, smoker, region_northeast, region_northwest, region_southeast, region_southwest]])
+        # Preprocess the input data
+        processed_input = preprocessor.transform(input_data)
 
-    # Make the prediction
-    prediction = model.predict(input_features)[0]
+        # Perform prediction
+        prediction = model.predict(processed_input)[0]
 
-    # Render the result page with prediction
-    return f"""
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Prediction Result</title>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-            }}
-            .result-container {{
-                text-align: center;
-                padding: 20px;
-                border-radius: 8px;
-                background-color: rgba(255, 255, 255, 0.8);
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="result-container">
-            <h2>Prediction Result</h2>
-            <p>The predicted insurance cost is: <strong>${{prediction:.2f}}</strong></p>
-        </div>
-    </body>
-    </html>
-    """
+        # Return the prediction as a response
+        return f"<h2>Predicted Insurance Charge: ${prediction:.2f}</h2>"
 
+    except Exception as e:
+        return f"<h3>There was an error: {str(e)}</h3>"
+
+# Run the app
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
-
-
-            
+    app.run(host='0.0.0.0', port=5000)
