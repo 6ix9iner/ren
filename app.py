@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, request
 import numpy as np
 import joblib
 
@@ -69,33 +69,33 @@ def home():
             <h2>Insurance Cost Predictor</h2>
             <form action="/predict" method="post">
                 <div class="form-group">
-                    <label for="age">Age:</label>
+                    <label for="age">Age</label>
                     <input type="number" id="age" name="age" required>
                 </div>
                 <div class="form-group">
-                    <label for="sex">Sex:</label>
+                    <label for="sex">Sex</label>
                     <select id="sex" name="sex" required>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="bmi">BMI:</label>
+                    <label for="bmi">BMI</label>
                     <input type="number" id="bmi" name="bmi" step="0.1" required>
                 </div>
                 <div class="form-group">
-                    <label for="children">Number of Children:</label>
+                    <label for="children">Children</label>
                     <input type="number" id="children" name="children" required>
                 </div>
                 <div class="form-group">
-                    <label for="smoker">Smoker:</label>
+                    <label for="smoker">Smoker</label>
                     <select id="smoker" name="smoker" required>
                         <option value="yes">Yes</option>
                         <option value="no">No</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="region">Region:</label>
+                    <label for="region">Region</label>
                     <select id="region" name="region" required>
                         <option value="northeast">Northeast</option>
                         <option value="northwest">Northwest</option>
@@ -175,5 +175,6 @@ def predict():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
+
 
             
