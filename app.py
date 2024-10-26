@@ -21,7 +21,7 @@ numeric_transformer = Pipeline(steps=[
 ])
 
 categorical_transformer = Pipeline(steps=[
-    ('onehot', OneHotEncoder(drop='first'))  # drop='first' to avoid dummy variable trap
+    ('onehot', OneHotEncoder(drop='first', handle_unknown='ignore'))  # Handle unknown categories
 ])
 
 # Combine transformers using ColumnTransformer
@@ -31,7 +31,7 @@ preprocessor = ColumnTransformer(
         ('cat', categorical_transformer, categorical_features)
     ])
 
-# Fit the preprocessor on some dummy data
+# Fit the preprocessor on some dummy data to prevent errors during prediction
 dummy_data = pd.DataFrame({
     'age': [30],
     'sex': ['female'],
@@ -40,7 +40,7 @@ dummy_data = pd.DataFrame({
     'smoker': ['no'],
     'region': ['southeast']
 })
-preprocessor.fit(dummy_data)  # Fit preprocessor once to avoid errors later
+preprocessor.fit(dummy_data)
 
 # Define a function for predictions
 def predict_insurance(age, sex, bmi, children, smoker, region):
