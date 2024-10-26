@@ -1,6 +1,5 @@
 from flask import Flask, request, render_template_string
 import pandas as pd
-import numpy as np
 import joblib
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
@@ -171,3 +170,4 @@ def predict():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
