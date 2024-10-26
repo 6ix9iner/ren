@@ -18,7 +18,7 @@ HTML_TEMPLATE = """
     <title>Medical Insurance Cost Predictor</title>
     <style>
         body {
-            background-image: url('https://example.com/your-background-image.jpg'); /* Replace with your image URL */
+            background-image: url('https://www.google.com/imgres?q=images%20for%20web%20background%20download&imgurl=https%3A%2F%2Fplus.unsplash.com%2Fpremium_photo-1673480195911-3075a87738b0%3Ffm%3Djpg%26q%3D60%26w%3D3000%26ixlib%3Drb-4.0.3%26ixid%3DM3wxMjA3fDB8MHxzZWFyY2h8MXx8d2ViJTIwYmFja2dyb3VuZHxlbnwwfHwwfHx8MA%253D%253D&imgrefurl=https%3A%2F%2Funsplash.com%2Fs%2Fphotos%2Fweb-background&docid=ZflMew8d06L0PM&tbnid=V7-TiwsRk-hdzM&vet=12ahUKEwiGsb2o3KyJAxU9WkEAHUm0DNkQM3oECGcQAA..i&w=3000&h=2000&hcb=2&ved=2ahUKEwiGsb2o3KyJAxU9WkEAHUm0DNkQM3oECGcQAA'); /* Replace with your image URL */
             background-size: cover;
             font-family: Arial, sans-serif;
             color: white;
